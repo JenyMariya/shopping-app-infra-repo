@@ -1,0 +1,47 @@
+---
+name: "Developemnt Infra"
+
+on:
+  repository_dispatch:
+    types: [dev-deploy-event]
+
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.DEV_AWS_REGION }}
+
+    steps:
+
+      - name: "checkout repository"
+        uses: actions/checkout@v3
+
+      - name: "terraform installation"
+        uses: hashicorp/setup-terraform@v3
+
+      - name: "terraform init"
+        run: | 
+          terraform init \
+            -backend-config="access_key=${{ secrets.DEV_ACCESS_KEY }}" \
+            -backend-config="secret_key=${{ secrets.DEV_SECRET_ACCESS_KEY }}" \
+            -backend-config="region=${{ secrets.BUCKET_REGION }}" \
+            -backend-config="bucket=${{ secrets.DEV_S3_BUCKET }}" \
+            -backend-config="key=terraform.tfstate"
+
+      - name: "terraform format"
+        run: terraform fmt
+
+      - name: "terraform validate"
+        run: terraform validate
+
+      - name: "terraform plan"
+        run: terraform plan -var-file="dev.tfvars"
+
+      - name: "terraform apply"
+        run: terraform apply -auto-approve -var-file="dev.tfvars"

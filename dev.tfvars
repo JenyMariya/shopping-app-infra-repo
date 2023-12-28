@@ -1,0 +1,5 @@
+instance_type = "t2.micro"
+project_name = "shopping_app"
+project_env = "dev"
+domain_name = "mikhaelnoah.online"
+hostname = "shopping-dev"
